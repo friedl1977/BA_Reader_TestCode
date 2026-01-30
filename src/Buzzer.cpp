@@ -44,3 +44,12 @@ void Buzzer::playFailureTone() {
     playNote(2900, 120);
     playNote(1900, 200);
 }
+
+void Buzzer::playSleepTone() {
+    if (!initialized) return;
+    // Descending tone pattern to indicate going to sleep
+    playNote(2500, 100);
+    playNote(2000, 100);
+    playNote(1500, 100);
+    playNote(1000, 200);
+}

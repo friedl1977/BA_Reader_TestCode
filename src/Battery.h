@@ -11,11 +11,19 @@ public:
     static Battery& instance();
 
     bool begin();
-    float getSoC();       // State of Charge (0-100%)
-    float getVoltage();   // Battery voltage
-    uint16_t getRawVoltage();  // Raw VCELL register
+    float getSoC();           // State of Charge from ModelGauge (0-100%)
+    float getVoltage();       // Battery voltage (V)
+    uint16_t getRawVoltage(); // Raw VCELL register
+    float getChangeRate();    // Charge/discharge rate (%/hr)
 
-    void quickStart();   // Reset SOC calculation
+    void quickStart();        // Reset SOC calculation (use sparingly!)
+    void setRCOMP(uint8_t rcomp);  // Set compensation value
+    uint8_t getRCOMP();       // Get current RCOMP value
+    void sleep();             // Enter low-power sleep mode
+    void wake();              // Exit sleep mode
+
+    // For debugging
+    void printRegisters();
 
 private:
     Battery() = default;

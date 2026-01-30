@@ -18,6 +18,7 @@ public:
     void playNote(int frequency, int duration);
     void playSuccessTone();
     void playFailureTone();
+    void playSleepTone();
 
 private:
     Buzzer() = default;
