@@ -8,7 +8,7 @@ Charger& Charger::instance() {
 bool Charger::begin() {
     Wire.beginTransmission(MP2672A_ADDR);
     if (Wire.endTransmission() != 0) {
-        Serial.println("MP2672A not found at 0x4B");
+        Serial.println("MP2672A not found at 0x4B (Host-Control mode required)");
         _initialized = false;
         return false;
     }
@@ -17,6 +17,92 @@ bool Charger::begin() {
     _initialized = true;
     readAllRegisters();
     return true;
+}
+
+// =====================================================
+// Status register (REG03) readings
+// =====================================================
+
+ChargeStatus Charger::getChargeStatus() {
+    if (!_initialized) return ChargeStatus::NOT_CHARGING;
+    uint8_t reg = readReg(REG03_STATUS);
+    return static_cast<ChargeStatus>((reg >> 4) & 0x03);
+}
+
+const char* Charger::getChargeStatusString() {
+    switch (getChargeStatus()) {
+        case ChargeStatus::NOT_CHARGING: return "Not Charging";
+        case ChargeStatus::PRE_CHARGE:   return "Pre-charge";
+        case ChargeStatus::FAST_CHARGE:  return "Fast Charge";
+        case ChargeStatus::CHARGE_DONE:  return "Charge Done";
+        default: return "Unknown";
+    }
+}
+
+bool Charger::isCellBalancing() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG03_STATUS);
+    return (reg >> 3) & 0x01;
+}
+
+bool Charger::isInputPowerGood() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG03_STATUS);
+    return (reg >> 2) & 0x01;
+}
+
+bool Charger::isThermalRegulation() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG03_STATUS);
+    // THERM_STAT bit 1: 1 = thermal regulation active (charge current reduced)
+    return (reg >> 1) & 0x01;
+}
+
+bool Charger::isSystemMinVoltage() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG03_STATUS);
+    return reg & 0x01;
+}
+
+// =====================================================
+// Fault register (REG04) readings
+// =====================================================
+
+bool Charger::hasWatchdogFault() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG04_FAULT);
+    return (reg >> 7) & 0x01;
+}
+
+bool Charger::hasInputOVP() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG04_FAULT);
+    return (reg >> 6) & 0x01;
+}
+
+bool Charger::hasThermalShutdown() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG04_FAULT);
+    return (reg >> 5) & 0x01;
+}
+
+bool Charger::hasBatteryFault() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG04_FAULT);
+    return (reg >> 4) & 0x01;
+}
+
+bool Charger::hasChargeTimerFault() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG04_FAULT);
+    return (reg >> 3) & 0x01;
+}
+
+bool Charger::hasAnyFault() {
+    if (!_initialized) return false;
+    uint8_t reg = readReg(REG04_FAULT);
+    // Check bits 7:3 for any fault
+    return (reg & 0xF8) != 0;
 }
 
 void Charger::readAllRegisters() {

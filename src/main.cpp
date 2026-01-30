@@ -2,6 +2,7 @@
 #include "RFID.h"
 #include "Buzzer.h"
 #include "Battery.h"
+#include "Charger.h"
 #include "EPD_Display.h"
 #include "Buttons.h"
 
@@ -56,6 +57,7 @@ void setup() {
     RFID::instance().begin();
     Battery::instance().begin();
     Buttons::instance().begin();
+    Charger::instance().begin();  // Requires Host-Control mode (CV pin to VCC)
 
     // Configure charger status pin
     pinMode(CHARGER_ACOK_PIN, INPUT);
@@ -96,8 +98,17 @@ void loop() {
         float soc = Battery::instance().getSoC();
         float voltage = Battery::instance().getVoltage();
         bool charging = isCharging();
-        Serial.printlnf("Battery: %.1f%% (%.2fV) %s", soc, voltage,
-            charging ? "[Charging]" : "[On Battery]");
+        bool thermalLimit = Charger::instance().isThermalRegulation();
+
+        Serial.printlnf("Battery: %.1f%% (%.2fV) %s%s", soc, voltage,
+            charging ? "[Charging]" : "[On Battery]",
+            thermalLimit ? " [Thermal Limit]" : "");
+
+        // Show charger status if available
+        if (Charger::instance().isAvailable() && charging) {
+            Serial.printlnf("  Charger: %s", Charger::instance().getChargeStatusString());
+        }
+
         lastBattRead = millis();
 
         // Check for low battery and enter hibernate (only if not charging)
@@ -113,9 +124,13 @@ void loop() {
         float voltage = Battery::instance().getVoltage();
         uint16_t raw = Battery::instance().getRawVoltage();
         bool charging = isCharging();
-        char data[128];
-        snprintf(data, sizeof(data), "{\"soc\":%.1f,\"voltage\":%.2f,\"raw\":%u,\"charging\":%s}",
-            soc, voltage, raw, charging ? "true" : "false");
+        bool thermalLimit = Charger::instance().isThermalRegulation();
+        char data[192];
+        snprintf(data, sizeof(data),
+            "{\"soc\":%.1f,\"voltage\":%.2f,\"raw\":%u,\"charging\":%s,\"thermalLimit\":%s}",
+            soc, voltage, raw,
+            charging ? "true" : "false",
+            thermalLimit ? "true" : "false");
         Particle.publish("battery", data, PRIVATE);
         Serial.printlnf("Published: %s", data);
         lastPublish = millis();
