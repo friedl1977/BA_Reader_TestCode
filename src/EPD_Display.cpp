@@ -82,14 +82,9 @@ void EPD_Display::showHelloWorld() {
 void EPD_Display::showCustomImage() {
     logr.info("Displaying custom image...");
 
-    // The e-paper-display.com converter outputs RGB888 format even for B&W
-    // 960x680 pixels × 3 bytes (RGB) = 1,958,400 bytes (but we have 240,000)
-    // OR it's outputting grayscale: 960x680 / 3 = 652,800 / 3 = 217,600 pixels
-    // Actually: 800 × 300 × 1 byte = 240,000 bytes!
-
-    // The converter likely resized or cropped. Let's try 800×300:
-    const int16_t imgWidth = 800;
-    const int16_t imgHeight = 300;
+    // Image generated for 960x680 from e-paper-display.com
+    const int16_t imgWidth = 960;
+    const int16_t imgHeight = 680;
 
     display.setRotation(0);
     display.setFullWindow();
@@ -98,25 +93,12 @@ void EPD_Display::showCustomImage() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        // Center the image
-        int16_t x = (display.width() - imgWidth) / 2;
-        int16_t y = (display.height() - imgHeight) / 2;
-
-        // The data is likely 1 byte per pixel (0x00=black, 0xFF=white)
-        // We need to convert it to bitmap format for GxEPD2
-        for (int16_t row = 0; row < imgHeight; row++) {
-            for (int16_t col = 0; col < imgWidth; col++) {
-                uint8_t pixel = gImage[row * imgWidth + col];
-                // Draw white pixels (0xFF or high values) as white, black as black
-                if (pixel < 128) {
-                    display.drawPixel(x + col, y + row, GxEPD_BLACK);
-                }
-            }
-        }
+        // Draw full screen - use drawInvertedBitmap to flip black/white
+        display.drawInvertedBitmap(0, 0, gImage, imgWidth, imgHeight, GxEPD_BLACK);
 
     } while (display.nextPage());
 
-    logr.info("Custom image displayed (800x300, byte-per-pixel)");
+    logr.info("Custom image displayed (960x680, inverted)");
 }
 
 void EPD_Display::hibernate() {
