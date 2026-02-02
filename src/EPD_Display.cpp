@@ -82,7 +82,23 @@ void EPD_Display::showHelloWorld() {
 void EPD_Display::showCustomImage() {
     logr.info("Displaying custom image...");
 
-    // Image dimensions: 800x300 pixels (240,000 bytes for 1-bit monochrome)
+    // For monochrome EPD, images are typically bit-packed
+    // 240,000 bytes * 8 bits = 1,920,000 pixels
+    // Common EPD sizes that match:
+    // - 800x2400 = 1,920,000 pixels (too tall)
+    // - 960x2000 = 1,920,000 pixels (too tall)
+    // - 1600x1200 = 1,920,000 pixels (too wide)
+
+    // Most likely: Display width (960) x some height
+    // 1,920,000 / 960 = 2000 pixels tall - too tall
+
+    // OR the image was generated for a different display size
+    // Try 800x300 pixel image stored with bit packing:
+    // 800 / 8 = 100 bytes per row
+    // 300 rows * 100 bytes = 30,000 bytes (not 240,000)
+
+    // So 240,000 bytes must be 1 byte per pixel format
+    // Try 800x300 as raw bytes
     const int16_t imgWidth = 800;
     const int16_t imgHeight = 300;
 
@@ -93,16 +109,17 @@ void EPD_Display::showCustomImage() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        // Center the 800x300 image on the 960x680 display
+        // Center on display
         int16_t x = (display.width() - imgWidth) / 2;
         int16_t y = (display.height() - imgHeight) / 2;
 
-        // Draw the bitmap
-        display.drawBitmap(x, y, gImage, imgWidth, imgHeight, GxEPD_BLACK);
+        // Try drawing the image as a grayscale/raw byte array
+        // Since drawBitmap expects bit-packed, let's use drawGrayscaleBitmap or drawInvertedBitmap
+        display.drawInvertedBitmap(x, y, gImage, imgWidth, imgHeight, GxEPD_BLACK);
 
     } while (display.nextPage());
 
-    logr.info("Custom image displayed successfully");
+    logr.info("Custom image displayed (800x300, inverted)");
 }
 
 void EPD_Display::hibernate() {
