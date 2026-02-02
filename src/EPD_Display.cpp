@@ -82,19 +82,14 @@ void EPD_Display::showHelloWorld() {
 void EPD_Display::showCustomImage() {
     logr.info("Displaying custom image...");
 
-    // Image generated for 960x680 from e-paper-display.com
-    // 240,000 bytes for 960x680 = 652,800 pixels
-    // 240,000 / 652,800 ≈ 0.367 bytes per pixel
-    // This suggests the image is bit-packed: 652,800 pixels / 8 = 81,600 bytes (NOT 240,000)
+    // The e-paper-display.com converter outputs RGB888 format even for B&W
+    // 960x680 pixels × 3 bytes (RGB) = 1,958,400 bytes (but we have 240,000)
+    // OR it's outputting grayscale: 960x680 / 3 = 652,800 / 3 = 217,600 pixels
+    // Actually: 800 × 300 × 1 byte = 240,000 bytes!
 
-    // Wait - 240,000 bytes / 960 pixels wide = 250 bytes per row
-    // If bit-packed: 960 pixels / 8 bits = 120 bytes per row
-    // So 240,000 / 120 = 2000 rows!
-
-    // Actually, the e-paper-display.com converter might output in a different format
-    // Let's try: 960x680 with proper bit packing for GxEPD2
-    const int16_t imgWidth = 960;
-    const int16_t imgHeight = 680;
+    // The converter likely resized or cropped. Let's try 800×300:
+    const int16_t imgWidth = 800;
+    const int16_t imgHeight = 300;
 
     display.setRotation(0);
     display.setFullWindow();
@@ -103,12 +98,25 @@ void EPD_Display::showCustomImage() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        // Draw full screen
-        display.drawBitmap(0, 0, gImage, imgWidth, imgHeight, GxEPD_BLACK);
+        // Center the image
+        int16_t x = (display.width() - imgWidth) / 2;
+        int16_t y = (display.height() - imgHeight) / 2;
+
+        // The data is likely 1 byte per pixel (0x00=black, 0xFF=white)
+        // We need to convert it to bitmap format for GxEPD2
+        for (int16_t row = 0; row < imgHeight; row++) {
+            for (int16_t col = 0; col < imgWidth; col++) {
+                uint8_t pixel = gImage[row * imgWidth + col];
+                // Draw white pixels (0xFF or high values) as white, black as black
+                if (pixel < 128) {
+                    display.drawPixel(x + col, y + row, GxEPD_BLACK);
+                }
+            }
+        }
 
     } while (display.nextPage());
 
-    logr.info("Custom image displayed (960x680)");
+    logr.info("Custom image displayed (800x300, byte-per-pixel)");
 }
 
 void EPD_Display::hibernate() {
