@@ -52,6 +52,7 @@ public:
 
     void begin();
     void showHelloWorld();
+    void showCustomImage();
     void hibernate();
 
     // Access to underlying display for advanced usage

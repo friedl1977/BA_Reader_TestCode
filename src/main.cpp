@@ -65,8 +65,8 @@ void setup() {
 #if ENABLE_EPD_TEST
     Serial.println("Initializing EPD display...");
     EPD_Display::instance().begin();
-    Serial.println("Displaying Hello World...");
-    EPD_Display::instance().showHelloWorld();
+    Serial.println("Displaying custom image...");
+    EPD_Display::instance().showCustomImage();
     EPD_Display::instance().hibernate();
     Serial.println("EPD test complete");
 #endif

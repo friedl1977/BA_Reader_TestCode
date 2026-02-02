@@ -1,4 +1,5 @@
 #include "EPD_Display.h"
+#include "image_data.h"
 
 // Include a basic font
 #include <FreeSansBold24pt7b.h>
@@ -76,6 +77,32 @@ void EPD_Display::showHelloWorld() {
     } while (display.nextPage());
 
     logr.info("Hello World displayed successfully");
+}
+
+void EPD_Display::showCustomImage() {
+    logr.info("Displaying custom image...");
+
+    // Image dimensions: 800x300 pixels (240,000 bytes for 1-bit monochrome)
+    const int16_t imgWidth = 800;
+    const int16_t imgHeight = 300;
+
+    display.setRotation(0);
+    display.setFullWindow();
+
+    display.firstPage();
+    do {
+        display.fillScreen(GxEPD_WHITE);
+
+        // Center the 800x300 image on the 960x680 display
+        int16_t x = (display.width() - imgWidth) / 2;
+        int16_t y = (display.height() - imgHeight) / 2;
+
+        // Draw the bitmap
+        display.drawBitmap(x, y, gImage, imgWidth, imgHeight, GxEPD_BLACK);
+
+    } while (display.nextPage());
+
+    logr.info("Custom image displayed successfully");
 }
 
 void EPD_Display::hibernate() {
