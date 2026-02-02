@@ -82,25 +82,19 @@ void EPD_Display::showHelloWorld() {
 void EPD_Display::showCustomImage() {
     logr.info("Displaying custom image...");
 
-    // For monochrome EPD, images are typically bit-packed
-    // 240,000 bytes * 8 bits = 1,920,000 pixels
-    // Common EPD sizes that match:
-    // - 800x2400 = 1,920,000 pixels (too tall)
-    // - 960x2000 = 1,920,000 pixels (too tall)
-    // - 1600x1200 = 1,920,000 pixels (too wide)
+    // Image generated for 960x680 from e-paper-display.com
+    // 240,000 bytes for 960x680 = 652,800 pixels
+    // 240,000 / 652,800 ≈ 0.367 bytes per pixel
+    // This suggests the image is bit-packed: 652,800 pixels / 8 = 81,600 bytes (NOT 240,000)
 
-    // Most likely: Display width (960) x some height
-    // 1,920,000 / 960 = 2000 pixels tall - too tall
+    // Wait - 240,000 bytes / 960 pixels wide = 250 bytes per row
+    // If bit-packed: 960 pixels / 8 bits = 120 bytes per row
+    // So 240,000 / 120 = 2000 rows!
 
-    // OR the image was generated for a different display size
-    // Try 800x300 pixel image stored with bit packing:
-    // 800 / 8 = 100 bytes per row
-    // 300 rows * 100 bytes = 30,000 bytes (not 240,000)
-
-    // So 240,000 bytes must be 1 byte per pixel format
-    // Try 800x300 as raw bytes
-    const int16_t imgWidth = 800;
-    const int16_t imgHeight = 300;
+    // Actually, the e-paper-display.com converter might output in a different format
+    // Let's try: 960x680 with proper bit packing for GxEPD2
+    const int16_t imgWidth = 960;
+    const int16_t imgHeight = 680;
 
     display.setRotation(0);
     display.setFullWindow();
@@ -109,17 +103,12 @@ void EPD_Display::showCustomImage() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        // Center on display
-        int16_t x = (display.width() - imgWidth) / 2;
-        int16_t y = (display.height() - imgHeight) / 2;
-
-        // Try drawing the image as a grayscale/raw byte array
-        // Since drawBitmap expects bit-packed, let's use drawGrayscaleBitmap or drawInvertedBitmap
-        display.drawInvertedBitmap(x, y, gImage, imgWidth, imgHeight, GxEPD_BLACK);
+        // Draw full screen
+        display.drawBitmap(0, 0, gImage, imgWidth, imgHeight, GxEPD_BLACK);
 
     } while (display.nextPage());
 
-    logr.info("Custom image displayed (800x300, inverted)");
+    logr.info("Custom image displayed (960x680)");
 }
 
 void EPD_Display::hibernate() {
