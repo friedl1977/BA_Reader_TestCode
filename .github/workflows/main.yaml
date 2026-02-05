@@ -25,11 +25,11 @@ jobs:
         with:
           # Set the particle-platform-name to the platform you're targeting.
           # Allowed values: core, photon, p1, electron, argon, boron, xenon, esomx, bsom, b5som, tracker, trackerm, p2, msom
-          particle-platform-name: 'p2'
+          particle-platform-name: 'msom'
 
       # Optional: Upload compiled firmware as an artifact on GitHub.
       - name: Upload Firmware as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: firmware-artifact
           path: |
