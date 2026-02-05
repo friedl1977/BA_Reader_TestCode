@@ -1,5 +1,9 @@
 #include "EPD_Display.h"
+
+#if IMAGE_TEST_MODE
 #include "image_data.h"
+#include "image_data2.h"
+#endif
 
 // Include a basic font
 #include <FreeSansBold24pt7b.h>
@@ -80,7 +84,7 @@ void EPD_Display::showHelloWorld() {
 }
 
 void EPD_Display::showCustomImage() {
-    logr.info("Displaying custom image...");
+    logr.info("Displaying custom image 1...");
 
     // Image generated for 960x680 from e-paper-display.com
     const int16_t imgWidth = 960;
@@ -98,7 +102,39 @@ void EPD_Display::showCustomImage() {
 
     } while (display.nextPage());
 
-    logr.info("Custom image displayed (960x680, inverted)");
+    logr.info("Custom image 1 displayed (960x680, inverted)");
+}
+
+void EPD_Display::showCustomImage2() {
+    logr.info("Displaying custom image 2...");
+
+    // Image generated for 960x680 from e-paper-display.com
+    const int16_t imgWidth = 960;
+    const int16_t imgHeight = 680;
+
+    display.setRotation(0);
+    display.setFullWindow();
+
+    display.firstPage();
+    do {
+        display.fillScreen(GxEPD_WHITE);
+
+        // Draw full screen - use drawInvertedBitmap to flip black/white
+        display.drawInvertedBitmap(0, 0, gImage2, imgWidth, imgHeight, GxEPD_BLACK);
+
+    } while (display.nextPage());
+
+    logr.info("Custom image 2 displayed (960x680, inverted)");
+}
+
+void EPD_Display::toggleImage() {
+    currentImage = !currentImage;
+
+    if (currentImage) {
+        showCustomImage2();
+    } else {
+        showCustomImage();
+    }
 }
 
 void EPD_Display::hibernate() {

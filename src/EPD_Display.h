@@ -13,6 +13,11 @@
 #define ENABLE_GxEPD2_GFX 1
 
 // =====================================================
+// Image Test Mode - Enable to test image display with button toggle
+// =====================================================
+#define IMAGE_TEST_MODE  1  // Set to 1 to enable image test, 0 for normal operation
+
+// =====================================================
 // Display Selection - uncomment ONE section below:
 // =====================================================
 
@@ -53,6 +58,8 @@ public:
     void begin();
     void showHelloWorld();
     void showCustomImage();
+    void showCustomImage2();
+    void toggleImage();  // Toggle between image 1 and 2
     void hibernate();
 
     // Access to underlying display for advanced usage
@@ -67,6 +74,7 @@ private:
 
     static EPD_Display *_instance;
     EPD_Display_t display;
+    bool currentImage = false;  // false = image1, true = image2
 };
 
 #endif /* __EPD_DISPLAY_H */

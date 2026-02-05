@@ -16,6 +16,9 @@ public:
     void begin();
     void update();  // Call this in loop()
 
+    // Check if a specific button was just pressed (returns true once per press)
+    bool wasPressed(int buttonNum);
+
 private:
     Buttons();
 
@@ -23,6 +26,7 @@ private:
 
     bool lastState[4];  // Previous button states
     unsigned long lastDebounce[4];  // Debounce timers
+    bool buttonPressed[4];  // Flag for button press events
     static const unsigned long DEBOUNCE_MS = 50;
 
     void checkButton(int buttonNum, pin_t pin);

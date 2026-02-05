@@ -62,11 +62,17 @@ void setup() {
     // Configure charger status pin
     pinMode(CHARGER_ACOK_PIN, INPUT);
 
-#if ENABLE_EPD_TEST
+#if IMAGE_TEST_MODE
+    Serial.println("Initializing EPD display for image test mode...");
+    EPD_Display::instance().begin();
+    Serial.println("Displaying image 1 (press Button 1 to toggle)...");
+    EPD_Display::instance().showCustomImage();
+    EPD_Display::instance().hibernate();
+#elif ENABLE_EPD_TEST
     Serial.println("Initializing EPD display...");
     EPD_Display::instance().begin();
-    Serial.println("Displaying custom image...");
-    EPD_Display::instance().showCustomImage();
+    Serial.println("Displaying Hello World...");
+    EPD_Display::instance().showHelloWorld();
     EPD_Display::instance().hibernate();
     Serial.println("EPD test complete");
 #endif
@@ -84,6 +90,15 @@ void loop() {
 
     // Check buttons
     Buttons::instance().update();
+
+#if IMAGE_TEST_MODE
+    // In image test mode, Button 1 toggles between images
+    if (Buttons::instance().wasPressed(1)) {
+        Serial.println("Toggling image...");
+        EPD_Display::instance().toggleImage();
+        EPD_Display::instance().hibernate();
+    }
+#endif
 
     // RFID scanning
     uint8_t uid[4];

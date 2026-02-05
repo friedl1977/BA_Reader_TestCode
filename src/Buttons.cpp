@@ -13,6 +13,7 @@ Buttons::Buttons() {
     for (int i = 0; i < 4; i++) {
         lastState[i] = HIGH;  // Pull-up means default HIGH
         lastDebounce[i] = 0;
+        buttonPressed[i] = false;
     }
 }
 
@@ -43,7 +44,19 @@ void Buttons::checkButton(int buttonNum, pin_t pin) {
 
             if (currentState == LOW) {
                 Serial.printlnf("Button %d pressed", buttonNum);
+                buttonPressed[index] = true;
             }
         }
     }
+}
+
+bool Buttons::wasPressed(int buttonNum) {
+    int index = buttonNum - 1;
+    if (index < 0 || index >= 4) return false;
+
+    if (buttonPressed[index]) {
+        buttonPressed[index] = false;  // Clear the flag
+        return true;
+    }
+    return false;
 }
