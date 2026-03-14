@@ -15,17 +15,17 @@
 // =====================================================
 // Image Test Mode - Enable to test image display with button toggle
 // =====================================================
-#define IMAGE_TEST_MODE  1  // Set to 1 to enable image test, 0 for normal operation
+#define IMAGE_TEST_MODE  0  // Set to 1 to enable image test, 0 for normal operation
 
 // =====================================================
 // Display Selection - uncomment ONE section below:
 // =====================================================
 
 // --- Option 1: 4.2" 3-color display (for testing) ---
-//#define USE_42_INCH_3C
+#define USE_42_INCH_3C
 
 // --- Option 2: 13.3" B&W display ---
-#define USE_133_INCH_BW
+//#define USE_133_INCH_BW
 
 // =====================================================
 // Auto-configuration based on selection
@@ -57,10 +57,12 @@ public:
 
     void begin();
     void showHelloWorld();
+    void hibernate();
+#if IMAGE_TEST_MODE
     void showCustomImage();
     void showCustomImage2();
-    void toggleImage();  // Toggle between image 1 and 2
-    void hibernate();
+    void toggleImage();
+#endif
 
     // Access to underlying display for advanced usage
     EPD_Display_t& getDisplay() { return display; }

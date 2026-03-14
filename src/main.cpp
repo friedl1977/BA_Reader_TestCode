@@ -54,7 +54,8 @@ void setup() {
 
     Wire.begin();  // Init I2C first
 
-    RFID::instance().begin();
+    bool rfidOk = RFID::instance().begin();
+    Serial.printlnf("RFID init: %s", rfidOk ? "OK" : "FAILED");
     Battery::instance().begin();
     Buttons::instance().begin();
     Charger::instance().begin();  // Requires Host-Control mode (CV pin to VCC)
@@ -101,11 +102,15 @@ void loop() {
 #endif
 
     // RFID scanning
+    static unsigned long lastRfidDebug = 0;
     uint8_t uid[4];
     if (RFID::instance().scan(uid)) {
         Serial.printlnf("CARD: %02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3]);
         Buzzer::instance().playSuccessTone();
         delay(1000);
+    } else if (millis() - lastRfidDebug >= 3000) {
+        Serial.println("RFID: scanning... (no card)");
+        lastRfidDebug = millis();
     }
 
     // Battery to serial every 5 seconds

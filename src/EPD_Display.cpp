@@ -27,23 +27,63 @@ EPD_Display::~EPD_Display() {
 }
 
 void EPD_Display::begin() {
-    logr.info("Initializing EPD display...");
+    Serial.println("EPD: begin()");
 
     SPI.begin();
 
-    // Initialize display with 2ms reset pulse for Waveshare boards
-    display.init(115200, true, 2, false);
+    // Hard reset the display before init
+    pinMode(EPD_RST, OUTPUT);
+    digitalWrite(EPD_RST, LOW);
+    delay(20);
+    digitalWrite(EPD_RST, HIGH);
+    delay(20);
 
-    logr.info("EPD initialized. Resolution: %dx%d", display.width(), display.height());
+    // Check BUSY pin state before init
+    pinMode(EPD_BUSY, INPUT);
+    Serial.printlnf("EPD: BUSY pin (D22) before init: %d (0=ready, 1=busy)", digitalRead(EPD_BUSY));
+
+    // Initialize display with 20ms reset pulse
+    display.init(115200, true, 20, false);
+
+    Serial.printlnf("EPD: BUSY pin after init: %d", digitalRead(EPD_BUSY));
+    Serial.printlnf("EPD: Resolution: %dx%d", display.width(), display.height());
 }
 
 void EPD_Display::showHelloWorld() {
-    logr.info("Displaying Hello World...");
+    Serial.println("EPD: showHelloWorld()");
+    Serial.printlnf("EPD: BUSY pin before draw: %d", digitalRead(EPD_BUSY));
 
     display.setRotation(0);
     display.setFullWindow();
 
+    Serial.println("EPD: calling firstPage()...");
+
+    // Monitor BUSY pin for 2 seconds before firstPage to see if it changes
+    int lastBusy = digitalRead(EPD_BUSY);
+    unsigned long monStart = millis();
+    while (millis() - monStart < 2000) {
+        int b = digitalRead(EPD_BUSY);
+        if (b != lastBusy) {
+            Serial.printlnf("EPD: BUSY changed to %d at %lums", b, millis() - monStart);
+            lastBusy = b;
+        }
+    }
+    Serial.printlnf("EPD: BUSY before firstPage: %d", digitalRead(EPD_BUSY));
+
     display.firstPage();
+    Serial.printlnf("EPD: firstPage() returned, BUSY now: %d", digitalRead(EPD_BUSY));
+
+    // Monitor BUSY for 5 seconds after firstPage
+    lastBusy = digitalRead(EPD_BUSY);
+    monStart = millis();
+    while (millis() - monStart < 5000) {
+        int b = digitalRead(EPD_BUSY);
+        if (b != lastBusy) {
+            Serial.printlnf("EPD: BUSY changed to %d at %lums after firstPage", b, millis() - monStart);
+            lastBusy = b;
+        }
+    }
+    Serial.println("EPD: starting draw loop");
     do {
         display.fillScreen(GxEPD_WHITE);
 
@@ -80,9 +120,10 @@ void EPD_Display::showHelloWorld() {
 
     } while (display.nextPage());
 
-    logr.info("Hello World displayed successfully");
+    Serial.println("EPD: Hello World displayed successfully");
 }
 
+#if IMAGE_TEST_MODE
 void EPD_Display::showCustomImage() {
     logr.info("Displaying custom image 1...");
 
@@ -127,6 +168,9 @@ void EPD_Display::showCustomImage2() {
     logr.info("Custom image 2 displayed (960x680, inverted)");
 }
 
+#endif // IMAGE_TEST_MODE
+
+#if IMAGE_TEST_MODE
 void EPD_Display::toggleImage() {
     currentImage = !currentImage;
 
@@ -136,6 +180,7 @@ void EPD_Display::toggleImage() {
         showCustomImage();
     }
 }
+#endif // IMAGE_TEST_MODE
 
 void EPD_Display::hibernate() {
     logr.info("EPD entering hibernate mode");
