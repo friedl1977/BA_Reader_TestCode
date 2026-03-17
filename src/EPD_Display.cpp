@@ -1,12 +1,11 @@
 #include "EPD_Display.h"
+#include <math.h>
 
 #if IMAGE_TEST_MODE
 #include "image_data.h"
 #include "image_data2.h"
 #endif
 
-// Include a basic font
-#include <FreeSansBold24pt7b.h>
 
 static Logger logr("app.epd");
 
@@ -99,36 +98,31 @@ void EPD_Display::showHelloWorld() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        display.setTextColor(GxEPD_BLACK);
-        display.setFont(&FreeSansBold24pt7b);
+        int cx = display.width() / 2;   // 100
+        int cy = display.height() / 2;  // 100
 
-        int16_t tbx, tby;
-        uint16_t tbw, tbh;
+        // Outer face circle
+        display.drawCircle(cx, cy, 80, GxEPD_BLACK);
+        display.drawCircle(cx, cy, 79, GxEPD_BLACK);
 
-        // --- TOP: "Hello World! (TOP)" ---
-        const char* topText = "Hello World! (TOP)";
-        display.getTextBounds(topText, 0, 0, &tbx, &tby, &tbw, &tbh);
-        int16_t topX = (display.width() - tbw) / 2 - tbx;
-        int16_t topY = 50 - tby;
-        display.setCursor(topX, topY);
-        display.print(topText);
+        // Eyes
+        display.fillCircle(cx - 25, cy - 25, 8, GxEPD_BLACK);
+        display.fillCircle(cx + 25, cy - 25, 8, GxEPD_BLACK);
 
-        // --- BOTTOM: "Hello World! (BOTTOM)" ---
-        const char* bottomText = "Hello World! (BOTTOM)";
-        display.getTextBounds(bottomText, 0, 0, &tbx, &tby, &tbw, &tbh);
-        int16_t bottomX = (display.width() - tbw) / 2 - tbx;
-        int16_t bottomY = display.height() - 50;
-        display.setCursor(bottomX, bottomY);
-        display.print(bottomText);
+        // Smile - arc using horizontal lines
+        for (int angle = 20; angle <= 160; angle += 2) {
+            float rad = angle * 3.14159f / 180.0f;
+            int x = cx + (int)(45 * cos(rad));
+            int y = cy + (int)(45 * sin(rad));
+            display.fillCircle(x, y, 3, GxEPD_BLACK);
+        }
 
-        // --- CENTER: Display info ---
+        // "IT WORKS!" text below face
         display.setFont();
         display.setTextSize(2);
-        char info[64];
-        snprintf(info, sizeof(info), "%dx%d pixels", display.width(), display.height());
-        display.getTextBounds(info, 0, 0, &tbx, &tby, &tbw, &tbh);
-        display.setCursor((display.width() - tbw) / 2, display.height() / 2);
-        display.print(info);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(44, 185);
+        display.print("IT WORKS!");
 
     } while (display.nextPage());
 
