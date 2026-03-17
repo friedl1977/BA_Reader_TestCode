@@ -16,7 +16,7 @@
 // CHANGE THIS TO TEST DIFFERENT ANTENNAS (1-12)
 // Set to 0 for ALL OFF (no antenna)
 // =====================================================
-#define TEST_ANTENNA  0
+#define TEST_ANTENNA  1
 
 class RFID {
 public:

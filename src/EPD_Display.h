@@ -65,7 +65,8 @@ public:
     static EPD_Display &instance();
 
     void begin();
-    void showHelloWorld();
+    void showWaiting();
+    void showCardScanned(const char* uid);
     void hibernate();
 #if IMAGE_TEST_MODE
     void showCustomImage();

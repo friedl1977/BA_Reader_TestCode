@@ -60,73 +60,60 @@ void EPD_Display::begin() {
     Serial.printlnf("EPD: Resolution: %dx%d", display.width(), display.height());
 }
 
-void EPD_Display::showHelloWorld() {
-    Serial.println("EPD: showHelloWorld()");
-    Serial.printlnf("EPD: BUSY pin before draw: %d", digitalRead(EPD_BUSY));
+
+void EPD_Display::showWaiting() {
+    display.setRotation(0);
+    display.setFullWindow();
+    display.firstPage();
+    do {
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont();
+        display.setTextSize(3);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(28, 90);
+        display.print("Waiting...");
+    } while (display.nextPage());
+}
+
+void EPD_Display::showCardScanned(const char* uid) {
+    int cx = display.width() / 2;   // 100
+    int cy = display.height() / 4;  // 50 - top half
 
     display.setRotation(0);
     display.setFullWindow();
-
-    Serial.println("EPD: calling firstPage()...");
-
-    // Monitor BUSY pin for 2 seconds before firstPage to see if it changes
-    int lastBusy = digitalRead(EPD_BUSY);
-    unsigned long monStart = millis();
-    while (millis() - monStart < 2000) {
-        int b = digitalRead(EPD_BUSY);
-        if (b != lastBusy) {
-            Serial.printlnf("EPD: BUSY changed to %d at %lums", b, millis() - monStart);
-            lastBusy = b;
-        }
-    }
-    Serial.printlnf("EPD: BUSY before firstPage: %d", digitalRead(EPD_BUSY));
-
     display.firstPage();
-    Serial.printlnf("EPD: firstPage() returned, BUSY now: %d", digitalRead(EPD_BUSY));
-
-    // Monitor BUSY for 5 seconds after firstPage
-    lastBusy = digitalRead(EPD_BUSY);
-    monStart = millis();
-    while (millis() - monStart < 5000) {
-        int b = digitalRead(EPD_BUSY);
-        if (b != lastBusy) {
-            Serial.printlnf("EPD: BUSY changed to %d at %lums after firstPage", b, millis() - monStart);
-            lastBusy = b;
-        }
-    }
-    Serial.println("EPD: starting draw loop");
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        int cx = display.width() / 2;   // 100
-        int cy = display.height() / 2;  // 100
+        // Winking face outline
+        display.drawCircle(cx, cy, 40, GxEPD_BLACK);
+        display.drawCircle(cx, cy, 39, GxEPD_BLACK);
 
-        // Outer face circle
-        display.drawCircle(cx, cy, 80, GxEPD_BLACK);
-        display.drawCircle(cx, cy, 79, GxEPD_BLACK);
+        // Left eye - open
+        display.fillCircle(cx - 13, cy - 12, 5, GxEPD_BLACK);
 
-        // Eyes
-        display.fillCircle(cx - 25, cy - 25, 8, GxEPD_BLACK);
-        display.fillCircle(cx + 25, cy - 25, 8, GxEPD_BLACK);
+        // Right eye - winking (closed, drawn as a line)
+        display.drawLine(cx + 8, cy - 12, cx + 18, cy - 12, GxEPD_BLACK);
+        display.drawLine(cx + 8, cy - 13, cx + 18, cy - 13, GxEPD_BLACK);
 
-        // Smile - arc using horizontal lines
-        for (int angle = 20; angle <= 160; angle += 2) {
+        // Smile
+        for (int angle = 20; angle <= 160; angle += 3) {
             float rad = angle * 3.14159f / 180.0f;
-            int x = cx + (int)(45 * cos(rad));
-            int y = cy + (int)(45 * sin(rad));
-            display.fillCircle(x, y, 3, GxEPD_BLACK);
+            int x = cx + (int)(22 * cos(rad));
+            int y = cy + (int)(22 * sin(rad));
+            display.fillCircle(x, y, 2, GxEPD_BLACK);
         }
 
-        // "IT WORKS!" text below face
+        // UID in bottom half
         display.setFont();
         display.setTextSize(2);
         display.setTextColor(GxEPD_BLACK);
-        display.setCursor(44, 185);
-        display.print("IT WORKS!");
+        display.setCursor(10, 120);
+        display.print("Card UID:");
+        display.setCursor(10, 150);
+        display.print(uid);
 
     } while (display.nextPage());
-
-    Serial.println("EPD: Hello World displayed successfully");
 }
 
 #if IMAGE_TEST_MODE

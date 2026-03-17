@@ -64,6 +64,15 @@ bool RFID::begin() {
     digitalWrite(PN532_RST, HIGH);
     delay(50);
 
+    // I2C scan to find PN532
+    Serial.println("I2C scan:");
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() == 0) {
+            Serial.printlnf("  Found device at 0x%02X", addr);
+        }
+    }
+
     // Init PN532 (Wire.begin() called in main.cpp)
     _nfc = new DFRobot_PN532_IIC(PN532_IRQ, 0);
 

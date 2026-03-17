@@ -72,10 +72,9 @@ void setup() {
 #elif ENABLE_EPD_TEST
     Serial.println("Initializing EPD display...");
     EPD_Display::instance().begin();
-    Serial.println("Displaying Hello World...");
-    EPD_Display::instance().showHelloWorld();
+    EPD_Display::instance().showWaiting();
     EPD_Display::instance().hibernate();
-    Serial.println("EPD test complete");
+    Serial.println("EPD ready - waiting for card...");
 #endif
 
 #if ENABLE_CLOUD_PUBLISH
@@ -105,9 +104,16 @@ void loop() {
     static unsigned long lastRfidDebug = 0;
     uint8_t uid[4];
     if (RFID::instance().scan(uid)) {
-        Serial.printlnf("CARD: %02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3]);
+        char uidStr[12];
+        snprintf(uidStr, sizeof(uidStr), "%02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3]);
+        Serial.printlnf("CARD: %s", uidStr);
         Buzzer::instance().playSuccessTone();
-        delay(1000);
+#if ENABLE_EPD_TEST
+        EPD_Display::instance().showCardScanned(uidStr);
+        EPD_Display::instance().hibernate();
+        EPD_Display::instance().showWaiting();
+        EPD_Display::instance().hibernate();
+#endif
     } else if (millis() - lastRfidDebug >= 3000) {
         Serial.println("RFID: scanning... (no card)");
         lastRfidDebug = millis();
