@@ -22,10 +22,13 @@
 // =====================================================
 
 // --- Option 1: 4.2" 3-color display (for testing) ---
-#define USE_42_INCH_3C
+//#define USE_42_INCH_3C
 
 // --- Option 2: 13.3" B&W display ---
 //#define USE_133_INCH_BW
+
+// --- Option 3: 1.54" B&W display (for FPC connector verification) ---
+#define USE_154_INCH_BW
 
 // =====================================================
 // Auto-configuration based on selection
@@ -44,8 +47,14 @@
     #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
     typedef GxEPD2_BW<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> EPD_Display_t;
 
+#elif defined(USE_154_INCH_BW)
+    #include <GxEPD2_BW.h>
+    #define GxEPD2_DRIVER_CLASS GxEPD2_154  // 200x200, IL3829 (Waveshare 1.54" B&W V1)
+    #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
+    typedef GxEPD2_BW<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> EPD_Display_t;
+
 #else
-    #error "Please define USE_42_INCH_3C or USE_133_INCH_BW in EPD_Display.h"
+    #error "Please define USE_42_INCH_3C, USE_133_INCH_BW or USE_154_INCH_BW in EPD_Display.h"
 #endif
 
 /**

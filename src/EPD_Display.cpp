@@ -31,18 +31,30 @@ void EPD_Display::begin() {
 
     SPI.begin();
 
-    // Hard reset the display before init
+    // Monitor BUSY during manual RST toggle
+    pinMode(EPD_BUSY, INPUT);
     pinMode(EPD_RST, OUTPUT);
+
+    Serial.printlnf("EPD: BUSY before RST LOW: %d", digitalRead(EPD_BUSY));
     digitalWrite(EPD_RST, LOW);
     delay(20);
+    Serial.printlnf("EPD: BUSY during RST LOW: %d", digitalRead(EPD_BUSY));
     digitalWrite(EPD_RST, HIGH);
     delay(20);
+    Serial.printlnf("EPD: BUSY after RST HIGH: %d", digitalRead(EPD_BUSY));
 
-    // Check BUSY pin state before init
-    pinMode(EPD_BUSY, INPUT);
+    // Monitor BUSY for 500ms after reset to catch any transition
+    int lastBusy = digitalRead(EPD_BUSY);
+    unsigned long t = millis();
+    while (millis() - t < 500) {
+        int b = digitalRead(EPD_BUSY);
+        if (b != lastBusy) {
+            Serial.printlnf("EPD: BUSY changed to %d at %lums after RST", b, millis() - t);
+            lastBusy = b;
+        }
+    }
     Serial.printlnf("EPD: BUSY pin (D22) before init: %d (0=ready, 1=busy)", digitalRead(EPD_BUSY));
 
-    // Initialize display with 20ms reset pulse
     display.init(115200, true, 20, false);
 
     Serial.printlnf("EPD: BUSY pin after init: %d", digitalRead(EPD_BUSY));
